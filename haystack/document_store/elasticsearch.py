@@ -95,7 +95,7 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
         awsauth = AWS4Auth(username, password, region, 'es')
         
         self.client = Elasticsearch(hosts=[{"host": host, "port": port}], http_auth=awsauth, use_ssl=True, verify_certs=True, connection_class=RequestsHttpConnection)
-
+        print(self.client.indices.exists("movies"))
         # configure mappings to ES fields that will be used for querying / displaying results
         if type(search_fields) == str:
             search_fields = [search_fields]
