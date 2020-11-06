@@ -4,7 +4,7 @@ import time
 from copy import deepcopy
 from string import Template
 from typing import List, Optional, Union, Dict, Any
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, RequestsHttpConnection
 from elasticsearch.helpers import bulk, scan
 from elasticsearch.exceptions import RequestError
 import numpy as np
@@ -90,8 +90,7 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
 
 
         """
-        self.client = Elasticsearch(hosts=[{"host": host, "port": port}], http_auth=(username, password),
-                                    scheme=scheme, ca_certs=ca_certs, verify_certs=verify_certs, timeout=timeout)
+        self.client = Elasticsearch(hosts=[{"host": host, "port": port}], http_auth=(username, password, 'es'), use_ssl=True, verify_certs=True, connection_class=RequestsHttpConnection)
 
         # configure mappings to ES fields that will be used for querying / displaying results
         if type(search_fields) == str:
