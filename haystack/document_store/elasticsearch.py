@@ -64,8 +64,8 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
         :param text_field: Name of field that might contain the answer and will therefore be passed to the Reader Model (e.g. "full_text").
                            If no Reader is used (e.g. in FAQ-Style QA) the plain content of this field will just be returned.
         :param name_field: Name of field that contains the title of the the doc
-        :param embedding_field: Name of field containing an embedding vector (Only needed when using a dense retriever (e.g. DensePassageRetriever, EmbeddingRetriever) on top)
-        :param embedding_dim: Dimensionality of embedding vector (Only needed when using a dense retriever (e.g. DensePassageRetriever, EmbeddingRetriever) on top)
+        :param embedding_field: Name of field containing an embedding vector (Only needed when using a sparse retriever (e.g. sparsePassageRetriever, EmbeddingRetriever) on top)
+        :param embedding_dim: Dimensionality of embedding vector (Only needed when using a sparse retriever (e.g. sparsePassageRetriever, EmbeddingRetriever) on top)
         :param custom_mapping: If you want to use your own custom mapping for creating a new index in Elasticsearch, you can supply it here as a dictionary.
         :param analyzer: Specify the default analyzer from one of the built-ins when creating a new Elasticsearch Index.
                          Elasticsearch also has built-in analyzers for different languages (e.g. impacting tokenization). More info at:
@@ -137,11 +137,11 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
         if self.client.indices.exists(index=index_name):
             if self.embedding_field:
                 mapping = self.client.indices.get(index_name)[index_name]["mappings"]
-                if self.embedding_field in mapping["properties"] and mapping["properties"][self.embedding_field]["type"] != "dense_vector":
+                if self.embedding_field in mapping["properties"] and mapping["properties"][self.embedding_field]["type"] != "sparse_vector":
                     raise Exception(f"The '{index_name}' index in Elasticsearch already has a field called '{self.embedding_field}'"
                                     f" with the type '{mapping['properties'][self.embedding_field]['type']}'. Please update the "
                                     f"document_store to use a different name for the embedding_field parameter.")
-                mapping["properties"][self.embedding_field] = {"type": "dense_vector", "dims": self.embedding_dim}
+                mapping["properties"][self.embedding_field] = {"type": "sparse_vector", "dims": self.embedding_dim}
                 self.client.indices.put_mapping(index=index_name, body=mapping)
             return
 
@@ -173,7 +173,7 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
                 }
             }
             if self.embedding_field:
-                mapping["mappings"]["properties"][self.embedding_field] = {"type": "dense_vector", "dims": self.embedding_dim}
+                mapping["mappings"]["properties"][self.embedding_field] = {"type": "sparse_vector", "dims": self.embedding_dim}
 
         try:
             self.client.indices.create(index=index_name, body=mapping)
