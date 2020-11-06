@@ -9,6 +9,7 @@ from elasticsearch.helpers import bulk, scan
 from elasticsearch.exceptions import RequestError
 import numpy as np
 from scipy.special import expit
+from requests_aws4auth import AWS4Auth
 
 from haystack.document_store.base import BaseDocumentStore
 from haystack import Document, Label
@@ -45,6 +46,7 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
         similarity="dot_product",
         timeout=30,
         return_embedding: Optional[bool] = True,
+        region = "us-east-1"
     ):
         """
         A DocumentStore using Elasticsearch to store and query the documents for our search.
@@ -90,7 +92,9 @@ class ElasticsearchDocumentStore(BaseDocumentStore):
 
 
         """
-        self.client = Elasticsearch(hosts=[{"host": host, "port": port}], http_auth=(username, password, 'es'), use_ssl=True, verify_certs=True, connection_class=RequestsHttpConnection)
+        awsauth = AWS4Auth(username, password, region, 'es')
+        
+        self.client = Elasticsearch(hosts=[{"host": host, "port": port}], http_auth=awsauth, use_ssl=True, verify_certs=True, connection_class=RequestsHttpConnection)
 
         # configure mappings to ES fields that will be used for querying / displaying results
         if type(search_fields) == str:
